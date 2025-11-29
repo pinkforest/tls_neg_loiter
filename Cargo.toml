@@ -14,7 +14,7 @@ categories = ["science"]
 rustls = { version = "0.23", default-features = false, features = ["std"] }
 rustls-pki-types = { version = "1.12", default-features = false, features = ["std", "alloc"] }
 rustls-rustcrypto = { version = "=0.0.2-alpha", default-features = false, features = ["std", "alloc"] }
-rustls-graviola = { version = "0.3" }
+#rustls-graviola = { version = "0.3" }
 cfg-if = "1.0.4"
 
 [features]

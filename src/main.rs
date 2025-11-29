@@ -1,16 +1,16 @@
 //! tls loiter
 
-//const CA: &'static str = "certs/ca.rsa4096.crt";
+const CA: &'static str = "certs/ca.rsa4096.crt";
 //const CA: &'static str = "certs/ca.ed25519.crt";
-const CA: &'static str = "certs/ca.prime256v1.crt";
+//const CA: &'static str = "certs/ca.prime256v1.crt";
 
-//const CERT: &'static str = "certs/rustcryp.to.rsa4096.ca_signed.crt";
+const CERT: &'static str = "certs/rustcryp.to.rsa4096.ca_signed.crt";
 //const CERT: &'static str = "certs/rustcryp.to.ed25519.ca_signed.crt";
-const CERT: &'static str = "certs/rustcryp.to.prime256v1.ca_signed.crt";
+//const CERT: &'static str = "certs/rustcryp.to.prime256v1.ca_signed.crt";
 
-//const KEY: &'static str = "certs/rustcryp.to.rsa4096.key";
+const KEY: &'static str = "certs/rustcryp.to.rsa4096.key";
 //const KEY: &'static str = "certs/rustcryp.to.ed25519.key";
-const KEY: &'static str = "certs/rustcryp.to.prime256v1.pem";
+//const KEY: &'static str = "certs/rustcryp.to.prime256v1.pem";
 
 use rustls::{ServerConfig, ServerConnection};
 use rustls_pki_types::pem::PemObject;
@@ -20,6 +20,7 @@ use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::path::Path;
 use std::sync::Arc;
+use std::io::BufRead;
 
 fn load_file(f: &'static str) -> Vec<u8> {
     let mut f = File::open(Path::new(f)).unwrap();
@@ -29,7 +30,8 @@ fn load_file(f: &'static str) -> Vec<u8> {
 }
 
 fn main() {
-    let provider = rustls_graviola::default_provider();
+    //let provider = rustls_graviola::default_provider();
+    let provider = rustls_rustcrypto::provider();
     let rustls_config = ServerConfig::builder_with_provider(Arc::new(provider));
 
     let rustls_config = rustls_config.with_safe_default_protocol_versions().unwrap();
@@ -58,16 +60,28 @@ fn main() {
     loop {
         let incoming = sconn.read_tls(&mut sock).unwrap();
         let io_state = sconn.process_new_packets().unwrap();
-
+        
+        println!("Incoming tls = {incoming}, io_state = {:?}", io_state);
+        
+        if io_state.peer_has_closed() {
+            println!("Peer goodbye.");
+            break;
+        }
+        
         if !sconn.is_handshaking() {
             let mut reader = sconn.reader();
-            let mut rbuf: Vec<u8> = vec![];
-            let read_in = reader.read(&mut rbuf).unwrap();
+            //let mut rbuf: Vec<u8> = Vec::with_capacity(8192);
+            //let read_in = reader.read(&mut rbuf).unwrap();
 
-            println!("Read in {read_in} = {:?}", core::str::from_utf8(&rbuf));
-
-            // assume we got it
-            req_received = true;
+            match reader.fill_buf() {
+                Ok(rbuf) => {
+                    println!("Read in = {:?}", core::str::from_utf8(&rbuf));
+                    if rbuf.starts_with(b"GET") {
+                        req_received = true;
+                    }
+                }
+                Err(e) => {},
+            }                    
         }
 
         if req_received && !sent_out {
