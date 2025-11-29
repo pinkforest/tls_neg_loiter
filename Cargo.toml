@@ -1,0 +1,22 @@
+[package]
+name = "tls_neg_loiter"
+version = "0.0.0-scratch0"
+edition = "2024"
+description = "various experiments with rustls"
+homepage = "https://github.com/pinkforest/tls_neg_loiter"
+keywords = ["io", "uring", "epoll", "async"]
+license = "Apache-2.0/MIT"
+readme = "README.md"
+repository = "https://github.com/pinkforest/tls_neg_loiter"
+categories = ["science"]
+
+[dependencies]
+rustls = { version = "0.23", default-features = false, features = ["std"] }
+rustls-pki-types = { version = "1.12", default-features = false, features = ["std", "alloc"] }
+rustls-rustcrypto = { version = "=0.0.2-alpha", default-features = false, features = ["std", "alloc"] }
+rustls-graviola = { version = "0.3" }
+cfg-if = "1.0.4"
+
+[features]
+aws_lc = ["rustls/aws_lc_rs"]
+
